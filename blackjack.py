@@ -1,6 +1,5 @@
 '''
 Blackjack card game. Built this as a milestone project in my Python training course
-Double Downs still a work in progress
 '''
 from console import clear
 import random
@@ -38,21 +37,25 @@ class Table:
 		self.cards = {}
 		self.scores = {}
 		
-	def current_bets(self):
+	def current_bets(self,players):
 		clear()
 		print("Current Bets:")
-		for player in sorted(self.bets):
-			print(f"{player:<{10}}: {self.bets[player]}")
+		for player in players:
+		#for player in sorted(self.bets):
+			print(f"{player.name:<{15}}: {self.bets[player.name]}")
 		print("\n")
 		
-	def players_cards(self,player_score):
-		for player in sorted(self.cards):
+	def players_cards(self):
+		for player in current_players:
 			player_cards = ""
-			if player != "Dealer":
-				for card in self.cards[player]:
+			if player.hidden_card == True:
+				card = table.cards[player.name]
+				player_cards = f"{str(card[0])}\n{str(card[1])}\n" + "<Hidden Card>"
+			else:
+				for card in table.cards[player.name]:
 					player_cards += f"{str(card)}\n"
-				print(f"{player}'s Hand: ({player_score[player]})")
-				print(f"{player_cards}\n")
+			print(f"{player.name}'s Hand: {table.scores[player.name]}")
+			print(f"{player_cards}\n")
 	
 	def dealers_cards(self,full_hand = False,dealer_score = int()):
 		dealer_cards = ""
@@ -60,7 +63,8 @@ class Table:
 			for card in self.cards["Dealer"]:
 				dealer_cards += f"{str(card)}\n"
 		else:
-			dealer_cards += str(self.cards["Dealer"][0])	
+			card = str(self.cards["Dealer"][0])
+			dealer_cards = f"{card}\n" + "<Hidden Card>"	
 		print(f"Dealer's Hand: ({dealer_score})")
 		print(f"{dealer_cards}\n")
 		print("--------------------\n")
@@ -68,20 +72,21 @@ class Table:
 	def display(self,dealer_hand = False):
 		if dealer_hand:
 			clear()
-			table.current_bets()
+			table.current_bets(current_players)
 			table.dealers_cards(True,self.scores["Dealer"])
-			table.players_cards(self.scores)
+			table.players_cards()
 		else:
 			clear()
-			table.current_bets()
+			table.current_bets(current_players)
 			table.dealers_cards(dealer_score = table.cards["Dealer"][0].value)
-			table.players_cards(self.scores)
+			table.players_cards()
 			
 	def clear(self):
 		for player in current_players:
 			self.bets[player.name] = ""
 			self.cards[player.name] = []
 			self.scores[player.name] = ""
+			player.split = False
 		
 		self.cards["Dealer"] = []
 		self.scores["Dealer"] = ""
@@ -90,6 +95,7 @@ class Player:
 	def __init__(self,name,chips):
 		self.name = name
 		self.chips = chips
+		self.hidden_card = False
 		self.split = False
 		self.quit = False
 		
@@ -117,33 +123,37 @@ class Player:
 		while True:
 			table.display()
 			cards = table.cards[self.name]
-			actions = ["Stay","Hit"]
+			actions = ["Stand","Hit"]
 		
 			if table.scores[self.name] == "Bust!":
 				break
 			elif table.scores[self.name] == "Blackjack!":
 				break
 			elif self.split == True:
-				dealer.deal_card(self.name)
+				dealer.deal_card(self)
 				break
 			
 			print("--------------------\n")
 			print(f"{self.name}'s turn")
-			print("Stay")
+			print("Stand")
 			print("Hit")
-			if len(cards) == 2 and cards[0].rank == cards[1].rank:
-					if self.chips - table.bets[self.name] >= 0:
-						print("Split")
-						actions.append("Split")
-			#print("Double Down")
+			if len(cards) == 2 and cards[0].rank == cards[1].rank and self.split == False:
+				if self.chips - table.bets[self.name] >= 0:
+					print("Split")
+					actions.append("Split")
+			elif table.scores[self.name] in [9,10,11] and len(cards) == 2 and self.split == False:
+				if self.chips - table.bets[self.name] >= 0:
+					print("Double Down")
+					actions.append("Double Down")
+				
 			action = ""
 			while action not in actions:
 				action = input("Please choose an action: ")
 				
-			if action == "Stay":
+			if action == "Stand":
 				break
 			elif action == "Hit":
-				dealer.deal_card(self.name)
+				dealer.deal_card(self)
 			elif action == "Split":
 				if action not in actions:
 					continue
@@ -158,6 +168,16 @@ class Player:
 					self.split = True
 					current_players[split_index].split = True
 					table.scores[f"{self.name}-split"] = dealer.check_score((table.cards[f"{self.name}-split"]))
+			elif action == "Double Down":
+				if action not in actions:
+					continue
+				else:
+					self.hidden_card = True
+					self.chips -= table.bets[self.name]
+					table.bets[self.name] += table.bets[self.name]
+					dealer.deal_card(self)
+					break
+					
 		
 	def cash_out(self):
 		print(f"{self.name}, continue playing?")
@@ -168,18 +188,34 @@ class Player:
 		
 class Dealer:
 	def __init__(self):
+		self.name = "Dealer"
+		self.hidden_card = True
 		self.deck = Deck()
 		
 	def shuffle(self):
 		self.deck.shuffle()
 		
 	def deal_card(self,player):
-		table.cards[player].append(self.deck.deal_card())
-		table.scores[player] = self.check_score((table.cards[player]))
+		#Deal a card from the deck to the players hand on the table
+		table.cards[player.name].append(self.deck.deal_card())
 		
+		#Update the players total score
+		self.update_score(player)
+		
+	def update_score(self,player):
+		if player.hidden_card == True:
+			if player.name == "Dealer":
+				table.scores["Dealer"] = self.check_score([table.cards["Dealer"][0]])
+			else:
+				card = table.cards[player.name]
+				table.scores[player.name] = self.check_score([card[0],card[1]])
+		else:
+			table.scores[player.name] = self.check_score(table.cards[player.name])
+				
 	def check_score(self,cards):
 		total = 0
 		ace = False
+	
 		for card in cards:
 			if card.rank == "Ace":
 				ace = True
@@ -241,11 +277,21 @@ class Game:
 				continue
 			if not isinstance(num_of_players,int):
 				print("Please enter a number of players between 1 and 7")
-				
+		
+		#Prompt for player names and ensure there are no duplicate names
+		taken_names = []		
 		for num in range(1,num_of_players + 1):
-			player_name = input(f"Please enter Player {num}'s name: ")
-			current_players.append(Player(player_name,self.player_chips))
-			table.cards[player_name] = []
+			player_name = ""
+			while player_name not in taken_names:
+				player_name = input(f"Please enter Player {num}'s name: ")
+				if player_name in taken_names:
+					print("Name already taken, plase chose another name.")
+					player_name = ""
+				else:
+					current_players.append(Player(player_name,self.player_chips))
+					table.cards[player_name] = []
+					table.bets[player_name] = 0
+					taken_names.append(player_name)
 		table.cards["Dealer"] = []
 		
 	def remove_player(self,player):
@@ -278,17 +324,17 @@ class Game:
 			
 				#Place bets
 				for player in current_players:
-					table.current_bets()
+					table.current_bets(current_players)
 					player.bet()
 				
-				table.current_bets()
+				table.current_bets(current_players)
 				
 				#Deal cards
 				cards_dealt = 0
 				while cards_dealt < 2:
 					for player in current_players:
-						dealer.deal_card(player.name)
-					dealer.deal_card("Dealer")
+						dealer.deal_card(player)
+					dealer.deal_card(dealer)
 					cards_dealt += 1
 				
 				#Player actions
@@ -298,14 +344,23 @@ class Game:
 				#Dealer plays
 				table.display(True)
 				
+				#Dealer draws cards until greater than or equal to 17
+				dealer.hidden_card = False
+				dealer.update_score(dealer)
+				
 				while True:
 					if table.scores["Dealer"] in ["Bust!","Blackjack!"]:
 						break
 					elif table.scores["Dealer"] >= 17:
 						break
 						
-					dealer.deal_card("Dealer")
-					table.display(True)
+					dealer.deal_card(dealer)
+					
+				#Unhide any cards and display final hands
+				for player in current_players:
+					player.hidden_card = False
+					dealer.update_score(player)
+				table.display(True)
 			
 				#Award winners
 				for player in current_players:
@@ -313,27 +368,39 @@ class Game:
 				
 				#Play again?
 				for player in current_players:
+					
+					#Reset any splits
+					player.split == False
+					
+					#Flag broke players for removal
 					if player.chips == 0:
 						player.quit = True
+						
+					#Flad any split hands for removal
 					elif "split" in player.name:
 						player.quit = True
+						
+					#Ask player if they want to continue
 					else:	
 						response = player.cash_out()
 						if response == "n":
 							player.quit = True
-						
+							
+				#Remove flagged players		
 				for player in reversed(current_players):
 					if player.quit == True:
 						self.remove_player(player)
-						
+				
+				#If no players are left at the table, end the game		
 				if len(current_players) == 0:
 					break
 				
+				#Clear table for next round
 				table.clear()
-				
+			
+			print("Thanks for playing!")
 			break
 			
 if __name__ == "__main__":
 	blackjack = Game()
 	blackjack.StartGame()
-	
