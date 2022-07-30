@@ -226,7 +226,7 @@ class Dealer:
 				if total <= 21:
 					return total
 				else:
-				 return "Bust!"
+					return "Bust!"
 			else:
 				return "Bust!"
 		elif total == 21:
@@ -285,7 +285,7 @@ class Game:
 			while player_name not in taken_names:
 				player_name = input(f"Please enter Player {num}'s name: ")
 				if player_name in taken_names:
-					print("Name already taken, plase chose another name.")
+					print("Name already taken, please chose another name.")
 					player_name = ""
 				else:
 					current_players.append(Player(player_name,self.player_chips))
