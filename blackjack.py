@@ -1,8 +1,19 @@
 '''
 Blackjack card game. Built this as a milestone project in my Python training course
 '''
-from console import clear
+
 import random
+from os import system, name
+
+def clear():
+  
+    # for windows
+    if name == 'nt':
+        _ = system('cls')
+  
+    # for mac and linux(here, os.name is 'posix')
+    else:
+        _ = system('clear')
 
 #Playing Card attributes
 suits = ["Hearts","Diamonds","Clubs","Spades"]
