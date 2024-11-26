@@ -1,0 +1,11 @@
+# Template config.yamml file. Please update with your details
+'wordpress' :
+  'header': { 'user-agent' : 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'} # Wordpress is picky about the type of user agent supplied in the header. This one works well.
+  'wp_login' : 'https://yourwordpressdomain.com/wp-login.php'
+  'wp_admin' : 'https://yourwordpressdomain.com/wp-admin/'
+  'username' : 'username'
+  'password' : 'password'
+  'csv_url' : 'https://yourwordpressdomain.com/wp-admin/admin-ajax.php?action=memberslist_csv' #This is the link to the PMPro membership csv export
+
+'google_drive' :
+  'gdrive_id': 'id goes here' #This is the parent folder ID where all the club folders are stored
