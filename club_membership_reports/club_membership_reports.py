@@ -75,7 +75,7 @@ def get_membership_data(config):
         client.close()
         os._exit(0)
     
-    # Download the membership CSV file from the Paid Members Pro plugin
+    # Download the membership CSV file from the Paid Membership Pro plugin
     try:
         response = client.post(csv_url, allow_redirects=True, timeout=180)
         if response.ok:
