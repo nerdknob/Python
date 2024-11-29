@@ -5,7 +5,9 @@
   'wp_admin' : 'https://yourwordpressdomain.com/wp-admin/'
   'username' : 'username'
   'password' : 'password'
-  'csv_url' : 'https://yourwordpressdomain.com/wp-admin/admin-ajax.php?action=memberslist_csv' #This is the link to the PMPro membership csv export
+  'membership_url' : 'https://yourwordpressdomain.com/wp-admin/admin-ajax.php?action=memberslist_csv' #This is the link to the PMPro membership csv export
+  'orders_url' : 'https://youwordpressdomain.com/wp-admin/admin-ajax.php?action=orders_csv'
 
 'google_drive' :
-  'gdrive_id': 'id goes here' #This is the parent folder ID where all the club folders are stored
+  'club_folders_id' : 'id goes here' #This is the parent folder ID where all the club folders are stored
+  'reports_folder_id' : 'id goes here' #This is the parent folder where the full members list and orders spreadsheets are stored
